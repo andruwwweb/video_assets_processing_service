@@ -1,0 +1,21 @@
+{
+  "name": "@mpp/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mpp/config": "workspace:*",
+    "@mpp/core": "workspace:*",
+    "@mpp/db": "workspace:*",
+    "drizzle-orm": "^0.38.0",
+    "fastify": "^5.1.0",
+    "fastify-plugin": "^5.0.1",
+    "ioredis": "^5.4.1",
+    "pg": "^8.13.0"
+  }
+}
