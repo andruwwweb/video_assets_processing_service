@@ -2,10 +2,10 @@ import { sql } from 'drizzle-orm'
 import type { FastifyInstance } from 'fastify'
 
 export async function healthRoutes(app: FastifyInstance): Promise<void> {
-  // Liveness: процесс жив. Без проверки зависимостей.
+  // Liveness: the process is up. No dependency checks.
   app.get('/health', async () => ({ status: 'ok' }))
 
-  // Readiness: реально проверяет доступность PostgreSQL и Redis.
+  // Readiness: actually checks PostgreSQL and Redis availability.
   app.get('/ready', async (_req, reply) => {
     const checks: Record<'postgres' | 'redis', 'ok' | 'fail'> = {
       postgres: 'fail',

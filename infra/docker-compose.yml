@@ -1,8 +1,8 @@
 name: mpp
 
-# Инфраструктура для локальной разработки.
-# Все значения берутся из .env (см. .env.example) — дефолтов здесь нет.
-# Скрипты `pnpm infra:*` передают `--env-file .env`.
+# Local development infrastructure.
+# All values come from .env (see .env.example) — no defaults here.
+# The `pnpm infra:*` scripts pass `--env-file .env`.
 
 services:
   postgres:
@@ -54,7 +54,7 @@ services:
       timeout: 5s
       retries: 12
 
-  # Одноразовый init: создаёт бакет. Ждёт MinIO циклом, поэтому не зависит от healthcheck.
+  # One-shot init: creates the bucket. Loops until MinIO is up, so it doesn't depend on healthcheck.
   createbuckets:
     image: minio/mc:latest
     depends_on:

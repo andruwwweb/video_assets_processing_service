@@ -1,11 +1,11 @@
 import { loadDotenv } from '@mpp/config'
 import { defineConfig } from 'drizzle-kit'
 
-// Грузим .env и берём строку подключения только из него — без фолбэка в коде.
+// Load .env and take the connection string only from it — no fallback in code.
 loadDotenv()
 const url = process.env.DATABASE_URL
 if (!url) {
-  throw new Error('DATABASE_URL не задан — создай .env (cp .env.example .env)')
+  throw new Error('DATABASE_URL is not set — create .env (cp .env.example .env)')
 }
 
 export default defineConfig({

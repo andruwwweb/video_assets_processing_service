@@ -13,7 +13,7 @@ export const artifacts = pgTable(
     storageKey: text('storage_key').notNull().unique(),
     mime: text('mime'),
     size: bigint('size', { mode: 'number' }),
-    // Специфика артефакта, например { resolution: "720p", bitrate: 2500 }.
+    // Artifact-specific attributes, e.g. { resolution: "720p", bitrate: 2500 }.
     attributes: jsonb('attributes'),
     status: stepStatus('status').notNull().default('done'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

@@ -19,7 +19,7 @@ export const webhookEndpoints = pgTable(
       .notNull()
       .references(() => accounts.id, { onDelete: 'cascade' }),
     url: text('url').notNull(),
-    // Секрет для HMAC-подписи доставляемых событий.
+    // Secret for HMAC-signing delivered events.
     secret: text('secret').notNull(),
     events: webhookEvent('events').array().notNull(),
     active: boolean('active').notNull().default(true),

@@ -10,7 +10,7 @@ export interface DbHandle {
   pool: Pool
 }
 
-/** Создаёт пул соединений и drizzle-клиент. Вызывающий обязан закрыть pool (graceful shutdown). */
+/** Creates a connection pool and drizzle client. The caller must close the pool (graceful shutdown). */
 export function createDb(connectionString: string): DbHandle {
   const pool = new Pool({ connectionString })
   const db = drizzle(pool, { schema })

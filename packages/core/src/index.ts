@@ -1,6 +1,6 @@
 /**
- * Единый источник правды для доменных перечислений.
- * Эти кортежи используются и в TS-типах, и как значения pgEnum в @mpp/db.
+ * Single source of truth for domain enums.
+ * These tuples are used both as TS types and as pgEnum values in @mpp/db.
  */
 
 export const VIDEO_STATUSES = [
@@ -20,7 +20,7 @@ export type TaskStatus = (typeof TASK_STATUSES)[number]
 export const STEP_STATUSES = ['pending', 'processing', 'done', 'failed'] as const
 export type StepStatus = (typeof STEP_STATUSES)[number]
 
-/** Типы артефактов обработки (architecture §8). */
+/** Processing artifact types (architecture §8). */
 export const ARTIFACT_TYPES = [
   'thumbnail',
   'frames',
@@ -34,7 +34,7 @@ export type ArtifactType = (typeof ARTIFACT_TYPES)[number]
 export const API_KEY_STATUSES = ['active', 'disabled'] as const
 export type ApiKeyStatus = (typeof API_KEY_STATUSES)[number]
 
-/** События webhooks (ТЗ §9). */
+/** Webhook events (spec §9). */
 export const WEBHOOK_EVENTS = [
   'processing.completed',
   'processing.failed',

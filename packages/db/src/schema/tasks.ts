@@ -2,7 +2,7 @@ import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-c
 import { stepStatus, taskStatus } from './enums'
 import { videos } from './videos'
 
-/** Пользовательская «задача обработки» (ТЗ §6); одна задача ↔ один BullMQ Flow. */
+/** User-facing processing task (spec §6); one task ↔ one BullMQ flow. */
 export const processingTasks = pgTable(
   'processing_tasks',
   {
@@ -11,7 +11,7 @@ export const processingTasks = pgTable(
       .notNull()
       .references(() => videos.id, { onDelete: 'cascade' }),
     status: taskStatus('status').notNull().default('queued'),
-    // Агрегированный прогресс 0..100 по task_steps.
+    // Aggregated 0..100 progress across task_steps.
     progress: integer('progress').notNull().default(0),
     error: text('error'),
     startedAt: timestamp('started_at', { withTimezone: true }),
@@ -21,7 +21,7 @@ export const processingTasks = pgTable(
   (t) => [index('processing_tasks_video_id_idx').on(t.videoId)],
 )
 
-/** Гранулярный статус подзадач (probe, transcode_720, hls, ...). */
+/** Per-step status (probe, transcode_720, hls, ...). */
 export const taskSteps = pgTable(
   'task_steps',
   {

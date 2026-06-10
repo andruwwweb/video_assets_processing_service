@@ -4,8 +4,8 @@ import dotenv from 'dotenv'
 import { z } from 'zod'
 
 /**
- * Поднимается вверх по дереву от cwd до корня монорепо (где лежит pnpm-workspace.yaml),
- * чтобы загрузить общий .env независимо от того, из какого пакета запущен процесс.
+ * Walks up from cwd to the monorepo root (where pnpm-workspace.yaml lives)
+ * to load the shared .env regardless of which package started the process.
  */
 function findRepoRoot(start: string): string {
   let dir = start
@@ -19,7 +19,7 @@ function findRepoRoot(start: string): string {
 }
 
 let envFileLoaded = false
-/** Загружает корневой .env в process.env (один раз). Валидацию не делает. */
+/** Loads the root .env into process.env (once). Does not validate. */
 export function loadDotenv(): void {
   if (envFileLoaded) return
   const root = findRepoRoot(process.cwd())
@@ -27,14 +27,14 @@ export function loadDotenv(): void {
   envFileLoaded = true
 }
 
-/** "true"/"1"/"yes" -> true, иначе false. */
+/** "true"/"1"/"yes" -> true, otherwise false. */
 const boolFromEnv = z
   .string()
   .transform((v) => ['1', 'true', 'yes'].includes(v.toLowerCase()))
 
 /**
- * Дефолтов нет: всё берётся из .env (см. .env.example).
- * Отсутствие любой переменной — ошибка на старте.
+ * No defaults: everything comes from .env (see .env.example).
+ * A missing variable is a startup error.
  */
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']),
@@ -66,14 +66,14 @@ export type Env = z.infer<typeof EnvSchema>
 
 let cached: Env | null = null
 
-/** Загружает (один раз) и валидирует переменные окружения. Бросает при невалидной конфигурации. */
+/** Loads (once) and validates environment variables. Throws on invalid config. */
 export function loadEnv(): Env {
   if (cached) return cached
   loadDotenv()
   const parsed = EnvSchema.safeParse(process.env)
   if (!parsed.success) {
     console.error(
-      'Невалидная или неполная конфигурация .env (создай его: cp .env.example .env):\n',
+      'Invalid or incomplete .env configuration (create it: cp .env.example .env):\n',
       JSON.stringify(parsed.error.flatten().fieldErrors, null, 2),
     )
     throw new Error('Invalid environment variables')

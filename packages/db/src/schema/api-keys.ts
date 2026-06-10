@@ -10,9 +10,9 @@ export const apiKeys = pgTable(
       .notNull()
       .references(() => accounts.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
-    // Префикс показывается пользователю для идентификации ключа (например, mpp_live_AbCd).
+    // Shown to the user to identify the key (e.g. mpp_live_AbCd).
     prefix: text('prefix').notNull(),
-    // Хранится только хэш ключа, никогда сам ключ.
+    // Only the key hash is stored, never the key itself.
     keyHash: text('key_hash').notNull().unique(),
     status: apiKeyStatus('status').notNull().default('active'),
     lastUsedAt: timestamp('last_used_at', { withTimezone: true }),

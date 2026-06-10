@@ -14,7 +14,7 @@ export const videos = pgTable(
       .references(() => accounts.id, { onDelete: 'cascade' }),
     originalFilename: text('original_filename').notNull(),
     status: videoStatus('status').notNull().default('awaiting_upload'),
-    // Ключ оригинала в Object Storage; null пока загрузка не подтверждена.
+    // Original object storage key; null until the upload is confirmed.
     storageKey: text('storage_key'),
     metadata: jsonb('metadata').$type<VideoMetadata>(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

@@ -8,10 +8,10 @@ declare module 'fastify' {
   }
 }
 
-/** Подключает ioredis-клиент к Fastify и закрывает его при остановке. */
+/** Attaches an ioredis client to Fastify and closes it on shutdown. */
 export const redisPlugin = fp(async (app) => {
   const env = loadEnv()
-  // maxRetriesPerRequest: null — требование BullMQ; здесь же безопасно и для обычных запросов.
+  // maxRetriesPerRequest: null is required by BullMQ; also safe for regular requests.
   const redis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null })
   app.decorate('redis', redis)
   app.addHook('onClose', async () => {
