@@ -101,8 +101,8 @@ infra/
 
 ## Документация
 
-- [Функциональные требования (ТЗ)](./functional_requirements.md)
-- [Архитектура](./architecture_schema.md)
+- [Функциональные требования (ТЗ)](./architecture/functional_requirements.md)
+- [Архитектура](./architecture/architecture_schema.md)
 
 ## Лицензия
 

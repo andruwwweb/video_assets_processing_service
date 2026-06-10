@@ -24,6 +24,8 @@ npm-debug.log*
 coverage/
 
 #internal files
-ai_memory.md
-implementation_plan.md
-common_info.md
+.ai_dev/
+CLAUDE.md
+
+# local test artifacts
+/*.mp4

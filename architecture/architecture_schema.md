@@ -302,14 +302,14 @@ sequenceDiagram
     participant WH as Webhook Dispatcher
 
     C->>API: POST /v1/videos (auth)
-    API->>DB: insert video(awaiting_upload) + task(queued)
-    API-->>C: 201 {videoId, taskId, uploadUrl}
+    API->>DB: insert video(awaiting_upload)
+    API-->>C: 201 {videoId, uploadUrl}
 
     C->>S: PUT файл (presigned, напрямую)
     C->>API: POST /v1/videos/:id/complete
-    API->>DB: video.status = uploaded
+    API->>DB: video.status = uploaded + insert task(queued)
     API->>Q: add Flow(task)
-    API-->>C: 202 Accepted
+    API-->>C: 202 {taskId}
 
     Q->>W: probe job
     W->>S: скачать исходник
@@ -733,8 +733,9 @@ asset-processing-service/
 │   ├── docker-compose.yml
 │   └── docker/              # Dockerfile на сервис
 ├── .github/workflows/       # CI/CD
-├── functional_requirements.md
-└── architecture_schema.md   # (этот документ)
+└── architecture/
+    ├── functional_requirements.md
+    └── architecture_schema.md   # (этот документ)
 ```
 
 Почему monorepo: контракт «job → артефакт» и формы API используются и API, и воркером, и фронтом. Общий пакет `core` гарантирует, что они не разойдутся; альтернатива (отдельные репозитории) потребовала бы публикации пакетов и синхронизации версий.
