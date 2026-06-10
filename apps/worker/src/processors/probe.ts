@@ -3,6 +3,7 @@ import { loadEnv } from '@mpp/config'
 import { processingTasks, taskSteps, videos, type Database } from '@mpp/db'
 import { ffprobe } from '@mpp/media'
 import {
+  DEFAULT_JOB_OPTIONS,
   JOB,
   QUEUE,
   makeFlowProducer,
@@ -67,7 +68,7 @@ export async function probeProcessor(job: Job<ProbeJobData>, db: Database): Prom
     name: JOB.finalize,
     queueName: QUEUE.mediaHeavy,
     data: { videoId, taskId, accountId } satisfies FinalizeJobData,
-    opts: { jobId: `finalize-${taskId}` },
+    opts: { ...DEFAULT_JOB_OPTIONS, jobId: `finalize-${taskId}` },
     children: [
       {
         name: JOB.transcode720,
@@ -79,7 +80,7 @@ export async function probeProcessor(job: Job<ProbeJobData>, db: Database): Prom
           sourceKey: video.storageKey,
           label: '720p',
         } satisfies TranscodeJobData,
-        opts: { jobId: `transcode-${taskId}` },
+        opts: { ...DEFAULT_JOB_OPTIONS, jobId: `transcode-${taskId}` },
       },
     ],
   })
