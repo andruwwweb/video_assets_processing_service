@@ -1,0 +1,1 @@
+ALTER TABLE "artifacts" ADD CONSTRAINT "artifacts_storage_key_unique" UNIQUE("storage_key");

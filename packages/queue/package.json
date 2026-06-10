@@ -1,0 +1,17 @@
+{
+  "name": "@mpp/queue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mpp/config": "workspace:*",
+    "bullmq": "^5.34.0",
+    "ioredis": "5.10.1"
+  }
+}

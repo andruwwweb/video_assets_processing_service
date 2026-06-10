@@ -17,6 +17,7 @@
     "infra:reset": "docker compose --env-file .env -f infra/docker-compose.yml down -v",
     "db:generate": "pnpm --filter @mpp/db generate",
     "db:migrate": "pnpm --filter @mpp/db migrate",
+    "db:seed": "pnpm --filter @mpp/db seed",
     "db:studio": "pnpm --filter @mpp/db studio"
   },
   "devDependencies": {
@@ -24,5 +25,10 @@
     "tsx": "^4.19.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "ioredis": "5.10.1"
+    }
   }
 }

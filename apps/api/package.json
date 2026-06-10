@@ -9,13 +9,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fastify/swagger": "^9.4.0",
+    "@fastify/swagger-ui": "^5.2.0",
     "@mpp/config": "workspace:*",
     "@mpp/core": "workspace:*",
     "@mpp/db": "workspace:*",
+    "@mpp/queue": "workspace:*",
+    "@mpp/storage": "workspace:*",
     "drizzle-orm": "^0.38.0",
     "fastify": "^5.1.0",
     "fastify-plugin": "^5.0.1",
-    "ioredis": "^5.4.1",
-    "pg": "^8.13.0"
+    "fastify-type-provider-zod": "^4.0.0",
+    "ioredis": "5.10.1",
+    "pg": "^8.13.0",
+    "zod": "^3.24.0"
   }
 }

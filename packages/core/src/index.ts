@@ -44,3 +44,16 @@ export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number]
 
 export const DELIVERY_STATUSES = ['pending', 'delivered', 'failed', 'dead'] as const
 export type DeliveryStatus = (typeof DELIVERY_STATUSES)[number]
+
+/** Metadata extracted from the source via ffprobe (architecture §5.2, §8). */
+export interface VideoMetadata {
+  duration?: number
+  width?: number
+  height?: number
+  fps?: number
+  videoCodec?: string
+  audioCodec?: string
+  bitrate?: number
+  aspectRatio?: string
+  size?: number
+}

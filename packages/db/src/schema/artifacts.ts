@@ -10,7 +10,7 @@ export const artifacts = pgTable(
       .notNull()
       .references(() => videos.id, { onDelete: 'cascade' }),
     type: artifactType('type').notNull(),
-    storageKey: text('storage_key').notNull(),
+    storageKey: text('storage_key').notNull().unique(),
     mime: text('mime'),
     size: bigint('size', { mode: 'number' }),
     // Специфика артефакта, например { resolution: "720p", bitrate: 2500 }.

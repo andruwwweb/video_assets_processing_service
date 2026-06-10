@@ -52,6 +52,14 @@ const EnvSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().min(1),
   S3_BUCKET: z.string().min(1),
   S3_FORCE_PATH_STYLE: boolFromEnv,
+
+  API_DOCS_ENABLED: boolFromEnv,
+  DEV_ACCOUNT_ID: z.string().uuid(),
+  PRESIGN_PUT_TTL_SECONDS: z.coerce.number().int().positive(),
+  PRESIGN_GET_TTL_SECONDS: z.coerce.number().int().positive(),
+
+  PROBE_TIMEOUT_MS: z.coerce.number().int().positive(),
+  TRANSCODE_TIMEOUT_MS: z.coerce.number().int().positive(),
 })
 
 export type Env = z.infer<typeof EnvSchema>

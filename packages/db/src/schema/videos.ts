@@ -1,19 +1,9 @@
 import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import type { VideoMetadata } from '@mpp/core'
 import { accounts } from './accounts'
 import { videoStatus } from './enums'
 
-/** Метаданные из ffprobe (architecture §5.2). */
-export interface VideoMetadata {
-  duration?: number
-  width?: number
-  height?: number
-  fps?: number
-  videoCodec?: string
-  audioCodec?: string
-  bitrate?: number
-  aspectRatio?: string
-  size?: number
-}
+export type { VideoMetadata } from '@mpp/core'
 
 export const videos = pgTable(
   'videos',
