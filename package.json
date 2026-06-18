@@ -8,7 +8,7 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=!@mpp/worker",
     "build": "turbo run build",
     "typecheck": "tsc --noEmit",
     "infra:up": "docker compose --env-file .env -f infra/docker-compose.yml up -d",

@@ -16,6 +16,8 @@ export interface TranscodeJobData {
   sourceKey: string
   /** Rendition label, e.g. "720p". */
   label: string
+  /** Source duration (seconds) from probe; used for live progress %. */
+  durationSec?: number
 }
 
 export interface FinalizeJobData {

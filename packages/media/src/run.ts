@@ -8,6 +8,8 @@ export interface RunResult {
 export interface RunOptions {
   /** Hard timeout; the process is SIGKILLed if exceeded. */
   timeoutMs: number
+  /** Called for each complete stdout line (used to parse ffmpeg `-progress`). */
+  onStdoutLine?: (line: string) => void
 }
 
 /**
@@ -26,8 +28,17 @@ export function run(bin: string, args: string[], opts: RunOptions): Promise<RunR
       child.kill('SIGKILL')
     }, opts.timeoutMs)
 
+    let lineBuf = ''
     child.stdout.on('data', (d) => {
-      stdout += d.toString()
+      const text = d.toString()
+      stdout += text
+      if (!opts.onStdoutLine) return
+      lineBuf += text
+      let idx: number
+      while ((idx = lineBuf.indexOf('\n')) !== -1) {
+        opts.onStdoutLine(lineBuf.slice(0, idx))
+        lineBuf = lineBuf.slice(idx + 1)
+      }
     })
     child.stderr.on('data', (d) => {
       stderr += d.toString()

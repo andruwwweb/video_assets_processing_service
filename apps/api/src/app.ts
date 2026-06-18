@@ -12,9 +12,11 @@ import { redisPlugin } from './plugins/redis'
 import { queuePlugin } from './plugins/queue'
 import { devAccountPlugin } from './plugins/dev-account'
 import { errorHandlerPlugin } from './plugins/error-handler'
+import { wsPlugin } from './plugins/ws'
 import { healthRoutes } from './routes/health'
 import { videoRoutes } from './routes/videos'
 import { taskRoutes } from './routes/tasks'
+import { wsRoutes } from './routes/ws'
 
 /** Builds the Fastify instance with all plugins and routes. */
 export function buildApp(): FastifyInstance {
@@ -45,10 +47,12 @@ export function buildApp(): FastifyInstance {
   app.register(redisPlugin)
   app.register(queuePlugin)
   app.register(devAccountPlugin)
+  app.register(wsPlugin)
 
   app.register(healthRoutes)
   app.register(videoRoutes, { prefix: '/v1' })
   app.register(taskRoutes, { prefix: '/v1' })
+  app.register(wsRoutes, { prefix: '/v1' })
 
   // Raw OpenAPI document for tooling/clients.
   app.get('/openapi.json', { schema: { hide: true } }, () => app.swagger())

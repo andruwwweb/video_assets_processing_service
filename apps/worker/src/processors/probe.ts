@@ -7,6 +7,7 @@ import {
   JOB,
   QUEUE,
   makeFlowProducer,
+  publishTaskEvent,
   type FinalizeJobData,
   type Job,
   type ProbeJobData,
@@ -32,6 +33,8 @@ export async function probeProcessor(job: Job<ProbeJobData>, db: Database): Prom
     .where(and(eq(taskSteps.taskId, taskId), eq(taskSteps.type, 'probe')))
     .limit(1)
 
+  let durationSec = video.metadata?.duration
+
   if (probeStep?.status !== 'done') {
     await db.transaction(async (tx) => {
       await tx.update(videos).set({ status: 'processing' }).where(eq(videos.id, videoId))
@@ -45,11 +48,23 @@ export async function probeProcessor(job: Job<ProbeJobData>, db: Database): Prom
         .where(and(eq(taskSteps.taskId, taskId), eq(taskSteps.type, 'probe')))
     })
 
+    // Task enters processing — emit started once (on the first attempt, not retries).
+    if (probeStep?.status === 'pending') {
+      await publishTaskEvent({
+        type: 'task.started',
+        taskId,
+        videoId,
+        accountId,
+        at: new Date().toISOString(),
+      })
+    }
+
     const scratch = await makeScratch()
     try {
       const input = scratch.path('source')
       await download(video.storageKey, input)
       const metadata = await ffprobe(input, { timeoutMs: env.PROBE_TIMEOUT_MS })
+      durationSec = metadata.duration
       await db.transaction(async (tx) => {
         await tx.update(videos).set({ metadata }).where(eq(videos.id, videoId))
         await tx
@@ -79,6 +94,7 @@ export async function probeProcessor(job: Job<ProbeJobData>, db: Database): Prom
           accountId,
           sourceKey: video.storageKey,
           label: '720p',
+          durationSec,
         } satisfies TranscodeJobData,
         opts: { ...DEFAULT_JOB_OPTIONS, jobId: `transcode-${taskId}` },
       },

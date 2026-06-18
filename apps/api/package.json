@@ -11,6 +11,7 @@
   "dependencies": {
     "@fastify/swagger": "^9.4.0",
     "@fastify/swagger-ui": "^5.2.0",
+    "@fastify/websocket": "^11.0.0",
     "@mpp/config": "workspace:*",
     "@mpp/core": "workspace:*",
     "@mpp/db": "workspace:*",

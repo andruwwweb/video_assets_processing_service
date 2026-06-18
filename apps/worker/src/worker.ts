@@ -5,6 +5,7 @@ import {
   JOB,
   QUEUE,
   makeWorker,
+  publishTaskEvent,
   type FinalizeJobData,
   type Job,
   type ProbeJobData,
@@ -39,7 +40,11 @@ async function handleJobFailure(job: Job | undefined, err: Error): Promise<void>
   const maxAttempts = job.opts.attempts ?? 1
   if (job.attemptsMade < maxAttempts) return // a retry is still pending
 
-  const { videoId, taskId } = job.data as { videoId?: string; taskId?: string }
+  const { videoId, taskId, accountId } = job.data as {
+    videoId?: string
+    taskId?: string
+    accountId?: string
+  }
   if (!videoId || !taskId) return
   try {
     await db.transaction(async (tx) => {
@@ -53,6 +58,16 @@ async function handleJobFailure(job: Job | undefined, err: Error): Promise<void>
         .set({ status: 'failed', error: err.message })
         .where(and(eq(taskSteps.taskId, taskId), eq(taskSteps.type, job.name)))
     })
+    if (accountId) {
+      await publishTaskEvent({
+        type: 'task.failed',
+        taskId,
+        videoId,
+        accountId,
+        error: err.message,
+        at: new Date().toISOString(),
+      })
+    }
   } catch (e) {
     console.error(`failed to record failure for task ${taskId}:`, e)
   }

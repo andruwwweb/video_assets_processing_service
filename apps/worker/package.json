@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mpp/config": "workspace:*",
+    "@mpp/core": "workspace:*",
     "@mpp/db": "workspace:*",
     "@mpp/media": "workspace:*",
     "@mpp/queue": "workspace:*",
