@@ -1,0 +1,17 @@
+{
+  "name": "@mpp/webhook-dispatcher",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/dispatcher.ts",
+    "start": "tsx src/dispatcher.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mpp/config": "workspace:*",
+    "@mpp/db": "workspace:*",
+    "@mpp/queue": "workspace:*",
+    "drizzle-orm": "^0.38.0"
+  }
+}

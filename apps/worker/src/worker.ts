@@ -4,6 +4,7 @@ import { createDb, processingTasks, taskSteps, videos } from '@mpp/db'
 import {
   JOB,
   QUEUE,
+  enqueueWebhookEvent,
   makeWorker,
   publishTaskEvent,
   type AudioJobData,
@@ -112,6 +113,11 @@ async function handleJobFailure(job: Job | undefined, err: Error): Promise<void>
         accountId,
         error: err.message,
         at: new Date().toISOString(),
+      })
+      await enqueueWebhookEvent({
+        accountId,
+        event: 'processing.failed',
+        payload: { videoId, taskId, error: err.message },
       })
     }
   } catch (e) {

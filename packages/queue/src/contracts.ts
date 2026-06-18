@@ -4,6 +4,8 @@
  * the worker after probe knows the source resolution.
  */
 
+import type { WebhookEvent } from '@mpp/core'
+
 interface BaseJobData {
   videoId: string
   taskId: string
@@ -57,4 +59,28 @@ export const JOB = {
   rendition: 'rendition',
   hls: 'hls',
   finalize: 'finalize',
+} as const
+
+// --- Webhooks (stage 5) ---
+
+/** Domain event emitted by the worker; the dispatcher fans it out to endpoints. */
+export interface WebhookEventJobData {
+  accountId: string
+  event: WebhookEvent
+  payload: Record<string, unknown>
+}
+
+/** One delivery target (per endpoint), with its own retry policy. */
+export interface WebhookDeliveryJobData {
+  deliveryId: string
+  endpointId: string
+  url: string
+  secret: string
+  event: WebhookEvent
+  payload: Record<string, unknown>
+}
+
+export const WEBHOOK_JOB = {
+  event: 'webhook-event',
+  delivery: 'webhook-delivery',
 } as const

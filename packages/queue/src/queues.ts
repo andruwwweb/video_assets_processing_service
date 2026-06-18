@@ -8,6 +8,7 @@ export const QUEUE = {
   probe: 'probe',
   mediaLight: 'media-light', // thumbnail, frames, clip, audio
   mediaHeavy: 'media-heavy', // transcode renditions, hls
+  webhooks: 'webhooks', // outbound event delivery (stage 5)
 } as const
 export type QueueName = (typeof QUEUE)[keyof typeof QUEUE]
 

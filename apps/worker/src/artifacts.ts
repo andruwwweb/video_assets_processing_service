@@ -1,6 +1,6 @@
 import type { ArtifactType } from '@mpp/core'
 import { artifacts, type Database } from '@mpp/db'
-import { publishTaskEvent } from '@mpp/queue'
+import { enqueueWebhookEvent, publishTaskEvent } from '@mpp/queue'
 
 export interface RecordArtifactInput {
   videoId: string
@@ -35,5 +35,10 @@ export async function recordArtifact(db: Database, a: RecordArtifactInput): Prom
     artifactType: a.type,
     storageKey: a.storageKey,
     at: new Date().toISOString(),
+  })
+  await enqueueWebhookEvent({
+    accountId: a.accountId,
+    event: 'artifact.created',
+    payload: { videoId: a.videoId, artifactType: a.type, storageKey: a.storageKey },
   })
 }

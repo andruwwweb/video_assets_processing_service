@@ -10,9 +10,13 @@ export const errorHandlerPlugin = fp(async (app) => {
   app.setErrorHandler((err: FastifyError, req, reply) => {
     const status = err.statusCode ?? 500
     if (status >= 500) req.log.error({ err }, 'request failed')
+    const code =
+      status === 429
+        ? 'RATE_LIMITED'
+        : (err.code ?? (status >= 500 ? 'INTERNAL_ERROR' : 'BAD_REQUEST'))
     reply.code(status).send({
       error: {
-        code: err.code ?? (status >= 500 ? 'INTERNAL_ERROR' : 'BAD_REQUEST'),
+        code,
         message: err.message,
         // Fastify attaches `validation` for schema (Zod) failures.
         details: err.validation ?? null,

@@ -61,6 +61,15 @@ const EnvSchema = z.object({
   PROBE_TIMEOUT_MS: z.coerce.number().int().positive(),
   TRANSCODE_TIMEOUT_MS: z.coerce.number().int().positive(),
   MEDIA_LIGHT_TIMEOUT_MS: z.coerce.number().int().positive(),
+
+  // Auth / rate limit / webhooks (stage 5).
+  JWT_SECRET: z.string().min(16),
+  JWT_TTL_SECONDS: z.coerce.number().int().positive(),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive(),
+  RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive(),
+  API_KEY_CACHE_TTL_SECONDS: z.coerce.number().int().positive(),
+  WEBHOOK_TIMEOUT_MS: z.coerce.number().int().positive(),
+  WEBHOOK_MAX_ATTEMPTS: z.coerce.number().int().positive(),
 })
 
 export type Env = z.infer<typeof EnvSchema>
