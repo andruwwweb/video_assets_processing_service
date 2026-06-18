@@ -6,14 +6,28 @@ import {
   QUEUE,
   makeWorker,
   publishTaskEvent,
+  type AudioJobData,
+  type ClipJobData,
   type FinalizeJobData,
+  type FramesJobData,
+  type HlsJobData,
   type Job,
   type ProbeJobData,
-  type TranscodeJobData,
+  type RenditionJobData,
+  type ThumbnailJobData,
 } from '@mpp/queue'
 import { probeProcessor } from './processors/probe'
-import { transcodeProcessor } from './processors/transcode'
+import { thumbnailProcessor } from './processors/thumbnail'
+import { framesProcessor } from './processors/frames'
+import { clipProcessor } from './processors/clip'
+import { audioProcessor } from './processors/audio'
+import { renditionProcessor } from './processors/rendition'
+import { hlsProcessor } from './processors/hls'
 import { finalizeProcessor } from './processors/finalize'
+
+// Per-worker concurrency tuned to load class (architecture §5).
+const LIGHT_CONCURRENCY = 3
+const HEAVY_CONCURRENCY = 2
 
 const env = loadEnv()
 const { db, pool } = createDb(env.DATABASE_URL)
@@ -21,17 +35,49 @@ const { db, pool } = createDb(env.DATABASE_URL)
 // Phase A: probe gate.
 const probeWorker = makeWorker<ProbeJobData>(QUEUE.probe, (job) => probeProcessor(job, db))
 
-// Phase B: transcode + finalize on the heavy queue, dispatched by job name.
-const heavyWorker = makeWorker(QUEUE.mediaHeavy, async (job) => {
-  switch (job.name) {
-    case JOB.transcode720:
-      return transcodeProcessor(job as Job<TranscodeJobData>, db)
-    case JOB.finalize:
-      return finalizeProcessor(job as Job<FinalizeJobData>, db)
-    default:
-      throw new Error(`unknown job on media-heavy: ${job.name}`)
-  }
-})
+// Phase B leaves on media-light, dispatched by job name.
+const lightWorker = makeWorker(
+  QUEUE.mediaLight,
+  async (job) => {
+    switch (job.name) {
+      case JOB.thumbnail:
+        return thumbnailProcessor(job as Job<ThumbnailJobData>, db)
+      case JOB.frames:
+        return framesProcessor(job as Job<FramesJobData>, db)
+      case JOB.clip:
+        return clipProcessor(job as Job<ClipJobData>, db)
+      case JOB.audio:
+        return audioProcessor(job as Job<AudioJobData>, db)
+      default:
+        throw new Error(`unknown job on media-light: ${job.name}`)
+    }
+  },
+  { concurrency: LIGHT_CONCURRENCY },
+)
+
+// Phase B heavy work + fan-in + root on media-heavy.
+const heavyWorker = makeWorker(
+  QUEUE.mediaHeavy,
+  async (job) => {
+    switch (job.name) {
+      case JOB.rendition:
+        return renditionProcessor(job as Job<RenditionJobData>, db)
+      case JOB.hls:
+        return hlsProcessor(job as Job<HlsJobData>, db)
+      case JOB.finalize:
+        return finalizeProcessor(job as Job<FinalizeJobData>, db)
+      default:
+        throw new Error(`unknown job on media-heavy: ${job.name}`)
+    }
+  },
+  { concurrency: HEAVY_CONCURRENCY },
+)
+
+/** Step type for a job (renditions carry their height in the type). */
+function stepTypeOf(job: Job): string {
+  if (job.name === JOB.rendition) return `rendition_${(job.data as RenditionJobData).height}`
+  return job.name
+}
 
 /** On a job's final failure (retries exhausted), mark task/video/step failed (architecture §9, §16). */
 async function handleJobFailure(job: Job | undefined, err: Error): Promise<void> {
@@ -56,7 +102,7 @@ async function handleJobFailure(job: Job | undefined, err: Error): Promise<void>
       await tx
         .update(taskSteps)
         .set({ status: 'failed', error: err.message })
-        .where(and(eq(taskSteps.taskId, taskId), eq(taskSteps.type, job.name)))
+        .where(and(eq(taskSteps.taskId, taskId), eq(taskSteps.type, stepTypeOf(job))))
     })
     if (accountId) {
       await publishTaskEvent({
@@ -73,16 +119,17 @@ async function handleJobFailure(job: Job | undefined, err: Error): Promise<void>
   }
 }
 
-for (const w of [probeWorker, heavyWorker]) {
+const workers = [probeWorker, lightWorker, heavyWorker]
+for (const w of workers) {
   w.on('failed', (job, err) => void handleJobFailure(job, err))
   w.on('error', (err) => console.error(`worker error: ${err.message}`))
 }
 
-console.log('worker started: probe + media-heavy')
+console.log('worker started: probe + media-light + media-heavy')
 
 async function shutdown(signal: string): Promise<void> {
   console.log(`shutting down (${signal})`)
-  await Promise.allSettled([probeWorker.close(), heavyWorker.close()])
+  await Promise.allSettled(workers.map((w) => w.close()))
   await pool.end()
   process.exit(0)
 }

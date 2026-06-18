@@ -21,7 +21,7 @@ export const processingTasks = pgTable(
   (t) => [index('processing_tasks_video_id_idx').on(t.videoId)],
 )
 
-/** Per-step status (probe, transcode_720, hls, ...). */
+/** Per-step status (probe, thumbnail, rendition_720, hls, ...). */
 export const taskSteps = pgTable(
   'task_steps',
   {

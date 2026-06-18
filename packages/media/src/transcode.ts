@@ -1,6 +1,8 @@
 import { run, type RunOptions } from './run'
 
-export interface Transcode720Options extends RunOptions {
+export interface TranscodeOptions extends RunOptions {
+  /** Target height in px; width is auto (keeps aspect, kept even by scale=-2). */
+  height: number
   /** Source duration (seconds), from probe; required to derive live percent. */
   durationSec?: number
   /** Receives transcode percent (0..100) as ffmpeg progresses. */
@@ -24,13 +26,13 @@ function parseProgressLine(line: string, durationSec: number): number | null {
   return null
 }
 
-/** Transcodes the input into a 720p H.264/AAC MP4 (faststart for progressive play). */
-export async function transcode720(
+/** Transcodes the input into an H.264/AAC MP4 at the given height (faststart). */
+export async function transcode(
   input: string,
   output: string,
-  opts: Transcode720Options,
+  opts: TranscodeOptions,
 ): Promise<void> {
-  const { durationSec, onProgress, ...runOpts } = opts
+  const { height, durationSec, onProgress, ...runOpts } = opts
 
   let onStdoutLine: ((line: string) => void) | undefined
   if (durationSec && durationSec > 0 && onProgress) {
@@ -45,7 +47,7 @@ export async function transcode720(
     [
       '-y',
       '-i', input,
-      '-vf', 'scale=-2:720',
+      '-vf', `scale=-2:${height}`,
       '-c:v', 'libx264',
       '-preset', 'veryfast',
       '-crf', '23',

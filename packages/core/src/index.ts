@@ -86,7 +86,7 @@ export type TaskEvent =
       type: 'task.progress'
       /** Aggregated task progress 0..100. */
       progress: number
-      /** Step that produced this tick, e.g. "transcode_720". */
+      /** Step that produced this tick, e.g. "rendition_720". */
       step: string
       /** That step's own progress 0..100. */
       stepProgress: number
@@ -101,8 +101,16 @@ export type TaskEvent =
  * Extended with fan-out steps (thumbnail/clip/audio/hls) on stage 4.
  */
 export const STEP_WEIGHTS: Record<string, number> = {
-  probe: 10,
-  transcode_720: 90,
+  probe: 5,
+  thumbnail: 2,
+  frames: 4,
+  clip: 8,
+  audio: 5,
+  rendition_360: 8,
+  rendition_480: 11,
+  rendition_720: 16,
+  rendition_1080: 24,
+  hls: 12,
 }
 
 function clampPct(n: number): number {

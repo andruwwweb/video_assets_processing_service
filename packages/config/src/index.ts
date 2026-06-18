@@ -60,6 +60,7 @@ const EnvSchema = z.object({
 
   PROBE_TIMEOUT_MS: z.coerce.number().int().positive(),
   TRANSCODE_TIMEOUT_MS: z.coerce.number().int().positive(),
+  MEDIA_LIGHT_TIMEOUT_MS: z.coerce.number().int().positive(),
 })
 
 export type Env = z.infer<typeof EnvSchema>
