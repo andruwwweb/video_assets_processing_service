@@ -15,6 +15,13 @@
       "when": 1781130068055,
       "tag": "0001_dapper_absorbing_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782071070192,
+      "tag": "0002_goofy_dazzler",
+      "breakpoints": true
     }
   ]
 }

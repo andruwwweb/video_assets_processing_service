@@ -7,10 +7,12 @@ import { type Job, type ThumbnailJobData } from '@mpp/queue'
 import { download, makeScratch } from '../scratch'
 import { recordArtifact } from '../artifacts'
 import { reportProgress } from '../progress'
+import { isTaskActive } from '../cancel'
 
 /** Light leaf: single poster thumbnail at `atSec`. */
 export async function thumbnailProcessor(job: Job<ThumbnailJobData>, db: Database): Promise<void> {
   const { videoId, taskId, accountId, sourceKey, atSec } = job.data
+  if (!(await isTaskActive(db, taskId))) return // cancelled or video deleted
   const env = loadEnv()
   const outKey = thumbnailKey(accountId, videoId)
 

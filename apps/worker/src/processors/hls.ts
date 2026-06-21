@@ -8,6 +8,7 @@ import { type HlsJobData, type Job } from '@mpp/queue'
 import { download, makeScratch } from '../scratch'
 import { recordArtifact } from '../artifacts'
 import { reportProgress } from '../progress'
+import { isTaskActive } from '../cancel'
 
 function hlsContentType(name: string): string {
   if (name.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl'
@@ -22,6 +23,7 @@ function hlsContentType(name: string): string {
  */
 export async function hlsProcessor(job: Job<HlsJobData>, db: Database): Promise<void> {
   const { videoId, taskId, accountId, labels } = job.data
+  if (!(await isTaskActive(db, taskId))) return // cancelled or video deleted
   const env = loadEnv()
 
   const scratch = await makeScratch()

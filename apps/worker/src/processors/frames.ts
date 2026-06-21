@@ -7,10 +7,12 @@ import { type FramesJobData, type Job } from '@mpp/queue'
 import { download, makeScratch } from '../scratch'
 import { recordArtifact } from '../artifacts'
 import { reportProgress } from '../progress'
+import { isTaskActive } from '../cancel'
 
 /** Light leaf: frames every `intervalSec`; one artifact row per frame. */
 export async function framesProcessor(job: Job<FramesJobData>, db: Database): Promise<void> {
   const { videoId, taskId, accountId, sourceKey, intervalSec } = job.data
+  if (!(await isTaskActive(db, taskId))) return // cancelled or video deleted
   const env = loadEnv()
 
   const scratch = await makeScratch()

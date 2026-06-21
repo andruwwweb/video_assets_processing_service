@@ -7,10 +7,12 @@ import { type ClipJobData, type Job } from '@mpp/queue'
 import { download, makeScratch } from '../scratch'
 import { recordArtifact } from '../artifacts'
 import { reportProgress } from '../progress'
+import { isTaskActive } from '../cancel'
 
 /** Light leaf: short demo clip. */
 export async function clipProcessor(job: Job<ClipJobData>, db: Database): Promise<void> {
   const { videoId, taskId, accountId, sourceKey, startSec, durationSec, height } = job.data
+  if (!(await isTaskActive(db, taskId))) return // cancelled or video deleted
   const env = loadEnv()
   const outKey = clipKey(accountId, videoId)
 

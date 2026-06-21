@@ -1,9 +1,10 @@
 import { extname } from 'node:path'
 import type { FastifyInstance } from 'fastify'
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { and, desc, eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import { artifacts, processingTasks, taskSteps, videos } from '@mpp/db'
-import { objectExists, originalKey, presignGet, presignPut } from '@mpp/storage'
+import { deletePrefix, objectExists, originalKey, presignGet, presignPut, videoPrefix } from '@mpp/storage'
 import type { ProbeJobData } from '@mpp/queue'
 import {
   ArtifactList,
@@ -23,6 +24,8 @@ function extOf(filename: string): string {
 function err(code: string, message: string) {
   return { error: { code, message, details: null } }
 }
+
+const CancelResponse = z.object({ taskId: z.string().uuid(), status: z.string() })
 
 export async function videoRoutes(app: FastifyInstance): Promise<void> {
   const r = app.withTypeProvider<ZodTypeProvider>()
@@ -117,8 +120,16 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
     { schema: { params: IdParam, response: { 200: VideoDetail, 404: ErrorResponse } } },
     async (req, reply) => {
       const [v] = await app.db
-        .select()
+        .select({
+          id: videos.id,
+          originalFilename: videos.originalFilename,
+          status: videos.status,
+          createdAt: videos.createdAt,
+          metadata: videos.metadata,
+          taskId: processingTasks.id,
+        })
         .from(videos)
+        .leftJoin(processingTasks, eq(processingTasks.videoId, videos.id))
         .where(and(eq(videos.id, req.params.id), eq(videos.accountId, req.accountId)))
         .limit(1)
       if (!v) return reply.code(404).send(err('NOT_FOUND', 'video not found'))
@@ -128,6 +139,7 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
         status: v.status,
         createdAt: v.createdAt.toISOString(),
         metadata: v.metadata ?? null,
+        taskId: v.taskId ?? null,
       }
     },
   )
@@ -155,6 +167,78 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
         })),
       )
       return { items }
+    },
+  )
+
+  // Hard-delete a video: wipe its storage prefix, then the row (FK cascade
+  // removes its task, steps and artifacts). Any in-flight worker job fails
+  // harmlessly on the gone rows — cooperative cancel is a separate slice.
+  r.delete(
+    '/videos/:id',
+    {
+      schema: {
+        params: IdParam,
+        response: { 200: z.object({ ok: z.boolean() }), 404: ErrorResponse },
+      },
+    },
+    async (req, reply) => {
+      const [v] = await app.db
+        .select({ id: videos.id })
+        .from(videos)
+        .where(and(eq(videos.id, req.params.id), eq(videos.accountId, req.accountId)))
+        .limit(1)
+      if (!v) return reply.code(404).send(err('NOT_FOUND', 'video not found'))
+
+      // Trailing slash keeps the prefix exact (one video, not id-prefixed peers).
+      await deletePrefix(`${videoPrefix(req.accountId, v.id)}/`)
+      await app.db.delete(videos).where(eq(videos.id, v.id))
+      return { ok: true }
+    },
+  )
+
+  // Cooperatively cancel an in-flight task: flip it to `cancelled` so the worker
+  // bails at the next step boundary; the source stays (video back to `uploaded`).
+  r.post(
+    '/videos/:id/cancel',
+    {
+      schema: {
+        params: IdParam,
+        response: { 200: CancelResponse, 404: ErrorResponse, 409: ErrorResponse },
+      },
+    },
+    async (req, reply) => {
+      const [row] = await app.db
+        .select({
+          videoId: videos.id,
+          taskId: processingTasks.id,
+          taskStatus: processingTasks.status,
+        })
+        .from(videos)
+        .leftJoin(processingTasks, eq(processingTasks.videoId, videos.id))
+        .where(and(eq(videos.id, req.params.id), eq(videos.accountId, req.accountId)))
+        .limit(1)
+      if (!row) return reply.code(404).send(err('NOT_FOUND', 'video not found'))
+      if (!row.taskId) return reply.code(409).send(err('NOT_CANCELABLE', 'video has no processing task'))
+      const taskId = row.taskId
+      if (row.taskStatus === 'cancelled') return { taskId, status: 'cancelled' } // idempotent
+      if (row.taskStatus !== 'queued' && row.taskStatus !== 'processing') {
+        return reply.code(409).send(err('NOT_CANCELABLE', `task is ${row.taskStatus}`))
+      }
+
+      // Atomic guard: cancel only while still active — loses cleanly to a
+      // finalize that completes the task in the same instant.
+      const moved = await app.db.transaction(async (tx) => {
+        const updated = await tx
+          .update(processingTasks)
+          .set({ status: 'cancelled', finishedAt: new Date() })
+          .where(and(eq(processingTasks.id, taskId), inArray(processingTasks.status, ['queued', 'processing'])))
+          .returning({ id: processingTasks.id })
+        if (updated.length === 0) return false
+        await tx.update(videos).set({ status: 'uploaded' }).where(eq(videos.id, row.videoId))
+        return true
+      })
+      if (!moved) return reply.code(409).send(err('NOT_CANCELABLE', 'task already finished'))
+      return { taskId, status: 'cancelled' }
     },
   )
 }

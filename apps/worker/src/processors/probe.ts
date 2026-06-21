@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { loadEnv } from '@mpp/config'
 import { type VideoMetadata } from '@mpp/core'
 import { processingTasks, taskSteps, videos, type Database } from '@mpp/db'
@@ -20,6 +20,7 @@ import {
   type ThumbnailJobData,
 } from '@mpp/queue'
 import { download, makeScratch } from '../scratch'
+import { isTaskActive } from '../cancel'
 
 const RENDITION_LADDER = [360, 480, 720, 1080]
 
@@ -55,6 +56,7 @@ function computePlan(meta: VideoMetadata): Plan {
  */
 export async function probeProcessor(job: Job<ProbeJobData>, db: Database): Promise<void> {
   const { videoId, taskId, accountId } = job.data
+  if (!(await isTaskActive(db, taskId))) return // cancelled or video deleted
   const env = loadEnv()
 
   const [video] = await db.select().from(videos).where(eq(videos.id, videoId)).limit(1)
@@ -70,17 +72,24 @@ export async function probeProcessor(job: Job<ProbeJobData>, db: Database): Prom
   let meta: VideoMetadata = video.metadata ?? {}
 
   if (probeStep?.status !== 'done') {
-    await db.transaction(async (tx) => {
-      await tx.update(videos).set({ status: 'processing' }).where(eq(videos.id, videoId))
-      await tx
+    // Atomically claim the task (queued/processing → processing). If it was
+    // cancelled between the gate above and here, the guarded update touches no
+    // rows → bail without resurrecting it.
+    const claimed = await db.transaction(async (tx) => {
+      const rows = await tx
         .update(processingTasks)
         .set({ status: 'processing', startedAt: new Date() })
-        .where(eq(processingTasks.id, taskId))
+        .where(and(eq(processingTasks.id, taskId), inArray(processingTasks.status, ['queued', 'processing'])))
+        .returning({ id: processingTasks.id })
+      if (rows.length === 0) return false
+      await tx.update(videos).set({ status: 'processing' }).where(eq(videos.id, videoId))
       await tx
         .update(taskSteps)
         .set({ status: 'processing' })
         .where(and(eq(taskSteps.taskId, taskId), eq(taskSteps.type, 'probe')))
+      return true
     })
+    if (!claimed) return // cancelled or deleted
 
     // Emit started once (on the first attempt, not retries).
     if (probeStep?.status === 'pending') {

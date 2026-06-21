@@ -7,10 +7,12 @@ import { type AudioJobData, type Job } from '@mpp/queue'
 import { download, makeScratch } from '../scratch'
 import { recordArtifact } from '../artifacts'
 import { reportProgress } from '../progress'
+import { isTaskActive } from '../cancel'
 
 /** Light leaf: extract the audio track to MP3. */
 export async function audioProcessor(job: Job<AudioJobData>, db: Database): Promise<void> {
   const { videoId, taskId, accountId, sourceKey } = job.data
+  if (!(await isTaskActive(db, taskId))) return // cancelled or video deleted
   const env = loadEnv()
   const outKey = audioKey(accountId, videoId, 'mp3')
 

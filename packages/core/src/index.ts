@@ -14,7 +14,7 @@ export const VIDEO_STATUSES = [
 ] as const
 export type VideoStatus = (typeof VIDEO_STATUSES)[number]
 
-export const TASK_STATUSES = ['queued', 'processing', 'ready', 'failed'] as const
+export const TASK_STATUSES = ['queued', 'processing', 'ready', 'failed', 'cancelled'] as const
 export type TaskStatus = (typeof TASK_STATUSES)[number]
 
 export const STEP_STATUSES = ['pending', 'processing', 'done', 'failed'] as const
