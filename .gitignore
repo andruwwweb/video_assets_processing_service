@@ -5,6 +5,12 @@ node_modules/
 # build output
 dist/
 .turbo/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# vendored PrimeReact themes copied into web public/ at predev/prebuild
+apps/web/public/themes/
 
 # env
 .env

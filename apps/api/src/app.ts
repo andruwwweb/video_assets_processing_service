@@ -9,6 +9,7 @@ import {
 import { eq } from 'drizzle-orm'
 import { loadEnv } from '@mpp/config'
 import { apiKeyUsage, apiKeys } from '@mpp/db'
+import { corsPlugin } from './plugins/cors'
 import { dbPlugin } from './plugins/db'
 import { redisPlugin } from './plugins/redis'
 import { queuePlugin } from './plugins/queue'
@@ -41,6 +42,8 @@ export function buildApp(): FastifyInstance {
   app.register(fastifySwagger, {
     openapi: {
       info: { title: 'Media Processing Platform API', version: '0.0.0' },
+      // Sandbox "try it" requests go here (cross-origin to the API; CORS allows the dashboard).
+      servers: [{ url: env.API_PUBLIC_URL }],
     },
     transform: jsonSchemaTransform,
   })
@@ -48,6 +51,7 @@ export function buildApp(): FastifyInstance {
     app.register(fastifySwaggerUi, { routePrefix: '/docs' })
   }
 
+  app.register(corsPlugin)
   app.register(errorHandlerPlugin)
   app.register(dbPlugin)
   app.register(redisPlugin)

@@ -36,6 +36,8 @@ export const VideoItem = z.object({
 
 export const VideoDetail = VideoItem.extend({
   metadata: VideoMetadata,
+  // Current processing task (for real-time progress); null before `complete`.
+  taskId: z.string().uuid().nullable(),
 })
 
 export const VideoList = z.object({ items: z.array(VideoItem) })

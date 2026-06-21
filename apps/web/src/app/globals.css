@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Brand layer — retints PrimeReact's Lara theme into the "Studio" identity:
+  amber accent, Inter/Sora/IBM Plex Mono type, hairline borders, square-ish radii.
+  Doubled :root:root selector raises specificity above Lara's :root so these win
+  regardless of stylesheet load order (the theme <link> is injected at runtime).
+*/
+:root:root {
+  color-scheme: light;
+
+  /* Type — Lara components read var(--font-family). */
+  --font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Amber primary scale (bright fills: buttons, progress, active tints). */
+  --primary-50: #fffbeb;
+  --primary-100: #fef3c7;
+  --primary-200: #fde68a;
+  --primary-300: #fcd34d;
+  --primary-400: #fbbf24;
+  --primary-500: #f59e0b;
+  --primary-600: #d97706;
+  --primary-700: #b45309;
+  --primary-800: #92400e;
+  --primary-900: #78350f;
+  --primary-color: #f59e0b;
+  --primary-color-text: #1c1917;
+
+  /* Brand accent split — readable on light surfaces. */
+  --brand-accent: #b45309; /* amber-700: links, accent text */
+  --brand-emphasis: #92400e; /* amber-800: hover */
+  --brand-soft: #fff7ed; /* warm tint: active nav, chips */
+
+  /* Studio surfaces: cooler ground, hairline borders, amber focus. */
+  --surface-ground: #fafbfc;
+  --surface-border: #e6e8ec;
+  --focus-ring: 0 0 0 0.2rem rgba(245, 158, 11, 0.35);
+  --border-radius: 8px;
+}
+
+:root:root[data-theme='dark'] {
+  color-scheme: dark;
+  --primary-color: #fbbf24; /* brighter amber reads better on dark */
+  --primary-color-text: #1c1917;
+  --brand-accent: #fcd34d; /* amber-300 */
+  --brand-emphasis: #fde68a;
+  --brand-soft: rgba(245, 158, 11, 0.14);
+  --surface-border: rgba(255, 255, 255, 0.1);
+  --focus-ring: 0 0 0 0.2rem rgba(251, 191, 36, 0.35);
+}
+
+body {
+  @apply bg-surface-50 font-sans antialiased;
+  color: var(--text-color);
+}
+
+/* Display face for headings and the brand wordmark; tight tracking. */
+h1,
+h2,
+h3,
+.font-display,
+.p-card-title {
+  font-family: var(--font-sora), var(--font-inter), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Mono utility face for technical data (durations, codecs, ids, key prefixes). */
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'ss01';
+}
+
+/* Panel — surface container with hairline border + soft lift, so data tables
+   read as a distinct sheet instead of bleeding into the page ground. Clips its
+   children to the radius (table corners, paginator). */
+.panel {
+  background: var(--surface-0);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 1px 3px rgba(15, 23, 42, 0.05);
+}
+:root[data-theme='dark'] .panel {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Eyebrow — small all-caps mono label that encodes section/context. */
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+}
+
+/*
+  Signature: crop-mark frame. Corner brackets evoke a framing/crop viewfinder —
+  the platform's job is framing and transcoding video. Wrap any element with
+  <div class="crop-frame"> ... </div>.
+*/
+.crop-frame {
+  position: relative;
+}
+.crop-frame::before,
+.crop-frame::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  border: 1.5px solid var(--brand-accent);
+}
+.crop-frame::before {
+  top: -5px;
+  left: -5px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.crop-frame::after {
+  bottom: -5px;
+  right: -5px;
+  border-left: 0;
+  border-top: 0;
+}
+/* Optional second pair for the other two corners. */
+.crop-frame > .crop-tr,
+.crop-frame > .crop-bl {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  border: 1.5px solid var(--brand-accent);
+}
+.crop-frame > .crop-tr {
+  top: -5px;
+  right: -5px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.crop-frame > .crop-bl {
+  bottom: -5px;
+  left: -5px;
+  border-right: 0;
+  border-top: 0;
+}
+
+/* Smooth recolor when toggling theme. Scoped to a transient class so the
+   initial paint (and route changes) aren't animated — only the switch is. */
+.theme-anim *,
+.theme-anim *::before,
+.theme-anim *::after {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    fill 0.2s ease !important;
+}
+
+/* Thin, theme-aware scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-300) transparent;
+}
+
+/*
+  PrimeReact Password full-width fix. With toggleMask the component wraps its
+  <input> in an IconField div (.p-icon-field), which is a flex child of the
+  inline-flex .p-password root and so shrinks to the input's intrinsic width —
+  the field never fills its form column. The component's own rules live in
+  @layer primereact, so these unlayered rules win regardless of specificity.
+  Make the root a full-width flex container and let the wrapper + input span it.
+*/
+.p-password {
+  display: flex;
+  width: 100%;
+}
+.p-password > .p-icon-field {
+  flex: 1 1 auto;
+}
+.p-password .p-password-input {
+  width: 100%;
+}
+
+/*
+  4px vertical inner padding on all text inputs. Doubled selector raises
+  specificity above the Lara theme (injected at runtime via <link>, equal base
+  specificity) so this wins regardless of stylesheet load order. Horizontal
+  padding is left to the theme.
+*/
+.p-inputtext.p-inputtext {
+  padding: 4px;
+}
+
+/* ConfirmDialog footer: clear gap between the reject ("No") and accept buttons. */
+.p-confirm-dialog .p-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+.p-confirm-dialog .p-dialog-footer > button {
+  margin: 0;
+}

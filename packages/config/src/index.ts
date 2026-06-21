@@ -42,6 +42,8 @@ const EnvSchema = z.object({
 
   API_PORT: z.coerce.number().int().positive(),
   API_HOST: z.string().min(1),
+  // Public base URL of the API (used as the OpenAPI `servers` entry for Sandbox).
+  API_PUBLIC_URL: z.string().url(),
 
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
@@ -54,6 +56,8 @@ const EnvSchema = z.object({
   S3_FORCE_PATH_STYLE: boolFromEnv,
 
   API_DOCS_ENABLED: boolFromEnv,
+  // Allowed browser origin(s) for the dashboard (comma-separated).
+  CORS_ORIGIN: z.string().min(1),
   DEV_ACCOUNT_ID: z.string().uuid(),
   PRESIGN_PUT_TTL_SECONDS: z.coerce.number().int().positive(),
   PRESIGN_GET_TTL_SECONDS: z.coerce.number().int().positive(),

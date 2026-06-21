@@ -98,7 +98,8 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     },
   )
 
-  r.post('/auth/logout', { onRequest: app.requireUser }, async (_req, reply) => {
+  // Clearing the cookie needs no valid session (so a stale cookie can be cleared).
+  r.post('/auth/logout', async (_req, reply) => {
     reply.clearCookie('token', { path: '/' })
     return { ok: true }
   })

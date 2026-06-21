@@ -1,4 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts"]
+  "include": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts"],
+  "comment": "apps/web is excluded — Next.js typechecks it with its own JSX/DOM tsconfig.",
+  "exclude": ["apps/web"]
 }

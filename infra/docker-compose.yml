@@ -84,7 +84,9 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       API_PORT: ${API_PORT}
       API_HOST: ${API_HOST}
+      API_PUBLIC_URL: ${API_PUBLIC_URL}
       API_DOCS_ENABLED: ${API_DOCS_ENABLED}
+      CORS_ORIGIN: ${CORS_ORIGIN}
       DEV_ACCOUNT_ID: ${DEV_ACCOUNT_ID}
       # Service-name hosts (container view), assembled from the same discrete .env vars.
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
